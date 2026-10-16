@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>First Crack Roasters | Scroll to roast</title>
+<meta name="description" content="A 3D coffee roastery concept site. Scroll to roast the beans, pick a drink and watch it pour.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,300..800&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #dde1d3;
+  --surface: rgba(236, 239, 229, 0.82);
+  --text: #21160f;
+  --muted: #5b5446;
+  --accent: #a3202a;
+  --accent-ink: #fff6ef;
+  --line: rgba(33, 22, 15, 0.16);
+  --nav-bg: rgba(221, 225, 211, 0.78);
+  --focus: #a3202a;
+  --roast: #8e9a69;
+  --tint: 0.2;
+  --grain: 0.05;
+  --display: 'Bricolage Grotesque', 'Arial Narrow', system-ui, sans-serif;
+  --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #160f0b;
+    --surface: rgba(32, 23, 17, 0.8);
+    --text: #ede4d4;
+    --muted: #b0a491;
+    --accent: #e5545b;
+    --accent-ink: #1a0d0b;
+    --line: rgba(237, 228, 212, 0.14);
+    --nav-bg: rgba(22, 15, 11, 0.78);
+    --focus: #f08a8f;
+    --tint: 0.16;
+    --grain: 0.07;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #160f0b;
+  --surface: rgba(32, 23, 17, 0.8);
+  --text: #ede4d4;
+  --muted: #b0a491;
+  --accent: #e5545b;
+  --accent-ink: #1a0d0b;
+  --line: rgba(237, 228, 212, 0.14);
+  --nav-bg: rgba(22, 15, 11, 0.78);
+  --focus: #f08a8f;
+  --tint: 0.16;
+  --grain: 0.07;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(72px + env(safe-area-inset-top, 0px)); -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--display);
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 10;
+  background: var(--nav-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+img, svg { max-width: 100%; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 6px; }
+
+/* ---------- Layers ---------- */
+.backdrop { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: var(--bg); }
+.backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(65% 55% at 68% 55%, var(--roast), transparent 70%);
+  opacity: var(--tint);
+}
+#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; pointer-events: none; }
+.grain {
+  position: fixed; inset: 0; z-index: 3; pointer-events: none; opacity: var(--grain);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+main, .foot { position: relative; z-index: 2; }
+.no-webgl #scene { display: none; }
+
+.wrap { width: min(1240px, 100%); margin-inline: auto; padding-inline: clamp(20px, 5vw, 64px); }
+
+/* ---------- Nav ---------- */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 30;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: var(--nav-bg);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  border-bottom: 1px solid var(--line);
+}
+.nav-inner { display: flex; align-items: center; gap: 16px; height: 64px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; font-size: 1.15rem; letter-spacing: -0.01em; white-space: nowrap; }
+.brand svg { width: 26px; height: 26px; color: var(--roast); flex: none; }
+.links { display: flex; gap: 2px; margin-left: auto; }
+.links a { padding: 0.45rem 0.85rem; border-radius: 999px; color: var(--muted); text-decoration: none; font-weight: 500; font-size: 0.95rem; transition: color 0.2s, background 0.2s; }
+.links a:hover, .links a.active { color: var(--text); background: var(--surface); }
+.roast-pill { display: none; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.roast-pill .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--roast); flex: none; }
+.order-btn {
+  display: inline-flex; align-items: center; gap: 0.45em; text-decoration: none;
+  background: var(--text); color: var(--bg); font-weight: 600; font-size: 0.95rem;
+  padding: 0.5rem 0.6rem 0.5rem 1rem; border-radius: 999px; white-space: nowrap; transition: background 0.2s, color 0.2s;
+}
+.order-btn:hover { background: var(--accent); color: var(--accent-ink); }
+.order-btn .count { display: inline-grid; place-items: center; min-width: 1.6em; height: 1.6em; padding: 0 0.4em; border-radius: 999px; background: var(--bg); color: var(--text); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.order-btn.bump .count { animation: bump 0.45s cubic-bezier(0.3, 1.6, 0.5, 1); }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+.progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; }
+.progress span { display: block; height: 100%; background: var(--roast); transform-origin: left; transform: scaleX(0); }
+
+/* ---------- Roast rail ---------- */
+.rail { position: fixed; right: clamp(14px, 2vw, 32px); top: 50%; transform: translateY(-50%); z-index: 20; font-size: 0.8rem; color: var(--muted); }
+.rail-title { margin: 0 0 0.9rem; font-weight: 600; color: var(--text); }
+.rail ol { list-style: none; margin: 0; padding: 0; position: relative; display: grid; gap: 14px; }
+.rail ol::before { content: ""; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 1px; background: var(--line); }
+.rail li { display: grid; grid-template-columns: 11px 6.4em auto; align-items: center; gap: 10px; opacity: 0.5; transition: opacity 0.3s; }
+.rail li.done { opacity: 0.75; }
+.rail li.on { opacity: 1; color: var(--text); font-weight: 600; }
+.r-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 2px var(--bg); position: relative; transition: transform 0.3s; }
+.rail li.on .r-dot { transform: scale(1.5); }
+.r-temp { font-variant-numeric: tabular-nums; font-weight: 400; color: var(--muted); }
+
+/* ---------- Type ---------- */
+h1, h2, h3 { font-family: var(--display); margin: 0; }
+h2 { font-stretch: 84%; font-weight: 680; font-size: clamp(2.1rem, 4.4vw, 3.6rem); line-height: 1.02; letter-spacing: -0.022em; max-width: 16ch; }
+.intro { font-family: var(--serif); font-size: clamp(1.1rem, 1.4vw, 1.25rem); line-height: 1.65; color: var(--muted); max-width: 34em; margin: 1.1rem 0 0; }
+
+/* ---------- Sections ---------- */
+.stage { position: relative; min-height: 100vh; min-height: 100svh; display: flex; align-items: center; padding-block: clamp(100px, 13vh, 150px); }
+.stage > .wrap { width: min(1240px, 100%); }
+.col-left { max-width: min(600px, 100%); }
+.col-right { max-width: min(540px, 100%); margin-left: auto; margin-right: clamp(0px, 9vw, 140px); }
+
+/* Hero */
+.hero-copy { max-width: min(680px, 100%); }
+.hero h1 { font-stretch: 76%; font-weight: 720; font-size: clamp(3rem, 7vw, 6.8rem); line-height: 0.92; letter-spacing: -0.03em; margin-bottom: 0.4em; }
+.hero h1 .line { display: block; overflow: hidden; padding-bottom: 0.1em; margin-bottom: -0.1em; }
+.hero h1 .line > span { display: inline-block; animation: rise 1s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--i) * 110ms + 200ms); }
+.lede { font-family: var(--serif); font-size: clamp(1.15rem, 1.6vw, 1.35rem); line-height: 1.6; color: var(--muted); max-width: 31em; margin: 0 0 2rem; }
+.seq { animation: fadeIn 0.9s ease both; animation-delay: calc(var(--i) * 110ms + 200ms); }
+@keyframes rise { from { transform: translateY(105%); } to { transform: none; } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; font-family: var(--display); font-weight: 600; font-size: 1rem;
+  padding: 0.85em 1.45em; border-radius: 999px; border: 1.5px solid var(--text); background: transparent; color: var(--text);
+  text-decoration: none; cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.2s;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-solid { background: var(--text); color: var(--bg); }
+.btn-solid:hover { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn-line:hover { background: var(--text); color: var(--bg); }
+.btn[disabled] { opacity: 0.4; cursor: not-allowed; transform: none; }
+.now { margin: 2.6rem 0 0; display: flex; align-items: center; gap: 0.6rem; color: var(--muted); font-size: 0.95rem; }
+.now .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; }
+.now strong { color: var(--text); font-weight: 600; }
+.scroll-cue { position: absolute; left: 0; right: 0; bottom: clamp(24px, 5vh, 48px); margin: 0; font-size: 0.9rem; color: var(--muted); }
+.scroll-cue .wrap { display: flex; align-items: center; gap: 10px; }
+.scroll-cue .wrap::before { content: ""; width: 36px; height: 1.5px; background: var(--muted); }
+
+/* Story */
+.table-scroll { overflow-x: auto; margin-top: 2rem; }
+.origins { width: 100%; border-collapse: collapse; font-size: 1rem; }
+.origins caption { text-align: left; font-weight: 600; padding-bottom: 0.8rem; caption-side: top; }
+.origins th { text-align: left; font-weight: 500; font-size: 0.85rem; color: var(--muted); padding: 0 1rem 0.6rem 0; border-bottom: 1.5px solid var(--text); }
+.origins td { padding: 0.85rem 1rem 0.85rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.origins td:first-child { font-weight: 650; }
+.origins td:first-child span { display: block; font-weight: 400; font-size: 0.85rem; color: var(--muted); }
+.origins td:nth-child(2) { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.origins td:last-child { font-family: var(--serif); font-style: italic; font-size: 1.05rem; }
+
+/* Menu */
+.menu-list { list-style: none; margin: 2.2rem 0 0; padding: 0; border-top: 1.5px solid var(--text); }
+.drink {
+  position: relative; display: grid; grid-template-columns: 46px 1fr auto; gap: 18px; align-items: center;
+  padding: 1.1rem 0.4rem 1.1rem 0.9rem; border-bottom: 1px solid var(--line); cursor: pointer; outline-offset: -2px;
+}
+.drink::before { content: ""; position: absolute; left: 0; top: 18%; bottom: 18%; width: 3px; border-radius: 3px; background: var(--accent); transform: scaleY(0); transition: transform 0.3s; }
+.drink.active::before { transform: scaleY(1); }
+.swatch { width: 46px; height: 46px; border-radius: 50%; background: radial-gradient(circle at 50% 50%, var(--c1) 0 36%, var(--c2) 74%); box-shadow: 0 0 0 4px var(--cup), 0 0 0 5px var(--line); transition: transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1); }
+.drink.active .swatch { transform: scale(1.1); }
+.drink h3 { font-size: clamp(1.25rem, 2vw, 1.55rem); font-weight: 650; letter-spacing: -0.01em; transition: color 0.25s; }
+.drink.active h3 { color: var(--accent); }
+.drink p { margin: 0.2rem 0 0; font-family: var(--serif); font-size: 1rem; line-height: 1.45; color: var(--muted); max-width: 34em; }
+.buy { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.price { font-weight: 650; font-variant-numeric: tabular-nums; }
+.add { font-family: var(--display); font-weight: 600; font-size: 0.9rem; padding: 0.4em 1.1em; border-radius: 999px; border: 1.5px solid var(--text); background: transparent; color: var(--text); cursor: pointer; transition: background 0.2s, color 0.2s; }
+.add:hover { background: var(--text); color: var(--bg); }
+
+/* Process */
+.process .wrap { display: flex; flex-direction: column; justify-content: space-between; gap: clamp(200px, 36vh, 400px); }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(20px, 2.5vw, 36px); }
+.steps li { border-top: 1.5px solid var(--text); padding-top: 1rem; }
+.steps .n { display: block; font-stretch: 75%; font-weight: 300; font-size: 2.8rem; line-height: 1; color: var(--accent); margin-bottom: 0.6rem; font-variant-numeric: tabular-nums; }
+.steps h3 { font-size: 1.2rem; font-weight: 650; }
+.steps p { margin: 0.4rem 0 0; font-family: var(--serif); font-size: 1rem; line-height: 1.55; color: var(--muted); }
+
+/* Visit */
+.info { display: grid; grid-template-columns: auto 1fr; gap: 0.55rem 1.6rem; margin: 1.8rem 0 2rem; }
+.info dt { color: var(--muted); font-size: 0.9rem; padding-top: 0.2rem; }
+.info dd { margin: 0; font-family: var(--serif); font-size: 1.1rem; line-height: 1.5; }
+.order-panel { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: clamp(18px, 2.4vw, 26px); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.order-panel h3 { font-size: 1.15rem; font-weight: 650; }
+.order-empty { margin: 0.6rem 0 0; font-family: var(--serif); color: var(--muted); }
+#order-list { list-style: none; margin: 0.8rem 0 0; padding: 0; }
+#order-list li { display: grid; grid-template-columns: auto 1fr auto auto; gap: 0.75rem; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+#order-list .q { color: var(--muted); }
+.remove { background: none; border: 0; padding: 0.2rem; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; font: inherit; font-size: 0.85rem; }
+.remove:hover { color: var(--accent); }
+.total-row { display: flex; justify-content: space-between; align-items: baseline; margin: 1rem 0 1.1rem; font-weight: 700; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+.total-row span:first-child { font-weight: 500; color: var(--muted); font-size: 0.95rem; }
+.order-panel .btn { width: 100%; }
+
+/* Footer */
+.foot { border-top: 1px solid var(--line); padding: 28px 0; font-size: 0.9rem; color: var(--muted); }
+.foot .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+.foot p { margin: 0; }
+
+/* Toast */
+.toast-zone { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex; justify-content: center; padding: 0 16px calc(22px + env(safe-area-inset-bottom, 0px)); pointer-events: none; }
+.toast { background: var(--text); color: var(--bg); font-weight: 500; padding: 0.8rem 1.3rem; border-radius: 999px; max-width: 100%; text-align: center; opacity: 0; transform: translateY(140%); transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.35s; }
+.toast.show { opacity: 1; transform: none; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1099px) {
+  .rail { display: none; }
+  .roast-pill { display: flex; }
+  .col-right { margin-right: 0; }
+  .block { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: clamp(20px, 3vw, 32px); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+}
+@media (max-width: 899px) {
+  .links { display: none; }
+  .roast-pill { margin-left: auto; }
+  .steps { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 760px) {
+  .hero { align-items: flex-start; padding-top: calc(108px + env(safe-area-inset-top, 0px)); padding-bottom: 44vh; }
+  .scroll-cue { display: none; }
+  .stage:not(.hero) { padding-top: 40vh; }
+  .process .wrap { gap: 28px; }
+  .col-right { margin-left: 0; }
+  .brand span { display: none; }
+}
+@media (max-width: 520px) {
+  .steps { grid-template-columns: 1fr; }
+  .nav-inner { gap: 10px; }
+  .roast-pill .pill-temp { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .hero h1 .line > span, .seq { animation: none; }
+  .toast, .swatch, .drink::before { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="backdrop" aria-hidden="true"></div>
+<canvas id="scene" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="nav">
+  <div class="nav-inner wrap">
+    <a href="#top" class="brand" aria-label="First Crack Roasters, back to top">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(32 12 12)"><ellipse cx="12" cy="12" rx="6.6" ry="9.6" fill="currentColor"/><path d="M12 3.2c-2.6 3 2.6 6.4 0 8.8s2.6 5.8 0 8.8" fill="none" stroke="var(--bg)" stroke-width="1.6" stroke-linecap="round"/></g></svg>
+      <span>First Crack</span>
+    </a>
+    <nav class="links" aria-label="Sections">
+      <a href="#story">Story</a>
+      <a href="#menu">Menu</a>
+      <a href="#process">Process</a>
+      <a href="#visit">Visit</a>
+    </nav>
+    <div class="roast-pill"><span class="dot"></span><span class="pill-name">Green</span><span class="pill-temp">25°C</span></div>
+    <a class="order-btn" href="#visit">Order <span class="count">0</span></a>
+  </div>
+  <div class="progress" aria-hidden="true"><span></span></div>
+</header>
+
+<aside class="rail" aria-label="Current roast level">
+  <p class="rail-title">Roast level</p>
+  <ol>
+    <li><span class="r-dot" style="--c:#8e9a69"></span><span>Green</span><span class="r-temp">25°C</span></li>
+    <li><span class="r-dot" style="--c:#c4ad66"></span><span>Yellowing</span><span class="r-temp">160°C</span></li>
+    <li><span class="r-dot" style="--c:#a2683a"></span><span>Cinnamon</span><span class="r-temp">195°C</span></li>
+    <li><span class="r-dot" style="--c:#7a4523"></span><span>First crack</span><span class="r-temp">205°C</span></li>
+    <li><span class="r-dot" style="--c:#4d2914"></span><span>Full city</span><span class="r-temp">220°C</span></li>
+    <li><span class="r-dot" style="--c:#26140b"></span><span>French</span><span class="r-temp">240°C</span></li>
+  </ol>
+</aside>
+
+<main>
+  <section class="stage hero" id="top">
+    <div class="wrap">
+      <div class="hero-copy">
+        <h1 aria-label="Every bean starts green.">
+          <span class="line" aria-hidden="true"><span style="--i:0">Every bean</span></span>
+          <span class="line" aria-hidden="true"><span style="--i:1">starts green.</span></span>
+        </h1>
+        <p class="lede seq" style="--i:3">Scroll down and the beans roast with you, from raw green through first crack to a glossy dark roast. Then pick a drink and we'll pour it.</p>
+        <div class="actions seq" style="--i:4">
+          <a class="btn btn-solid" href="#menu">See the menu</a>
+          <a class="btn btn-line" href="#process">How we roast</a>
+        </div>
+        <p class="now seq" style="--i:5"><span class="dot" aria-hidden="true"></span>Now pouring <strong data-now-pouring>Flat White</strong></p>
+      </div>
+    </div>
+    <p class="scroll-cue seq" style="--i:6"><span class="wrap">Scroll to roast</span></p>
+  </section>
+
+  <section class="stage story" id="story">
+    <div class="wrap">
+      <div class="col-right block">
+        <h2>We buy from nine farms we've walked through.</h2>
+        <p class="intro">Every lot is cupped on the farm before we commit to it. We pay above the Fairtrade minimum, roast within a week of the beans landing, and print the farm's name on every bag.</p>
+        <div class="table-scroll">
+          <table class="origins">
+            <caption>Roasting this month</caption>
+            <thead><tr><th scope="col">Origin</th><th scope="col">Altitude</th><th scope="col">In the cup</th></tr></thead>
+            <tbody>
+              <tr><td>Baba Budangiri<span>Chikmagalur, Karnataka</span></td><td>1,500 m</td><td>Jaggery, orange peel</td></tr>
+              <tr><td>Araku Valley<span>Andhra Pradesh</span></td><td>1,100 m</td><td>Cocoa, red grape</td></tr>
+              <tr><td>Yirgacheffe<span>Gedeo, Ethiopia</span></td><td>2,000 m</td><td>Jasmine, bergamot</td></tr>
+              <tr><td>Huila<span>Colombia</span></td><td>1,700 m</td><td>Panela, red apple</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage menu" id="menu">
+    <div class="wrap">
+      <div class="col-left block">
+        <h2>Pick a drink and watch it pour.</h2>
+        <p class="intro">Hover over or tap a drink to see it in the cup. Add what you like and pick it up at the roastery.</p>
+        <ul class="menu-list">
+          <li class="drink" data-brew="espresso" tabindex="0" aria-current="false">
+            <span class="swatch" style="--c1:#b9773f;--c2:#2b1309;--cup:#24201e" aria-hidden="true"></span>
+            <div><h3>Espresso</h3><p>A double shot of our full city blend. Dark chocolate, cherry, short clean finish.</p></div>
+            <div class="buy"><span class="price">₹160</span><button class="add" type="button" aria-label="Add Espresso to order">Add</button></div>
+          </li>
+          <li class="drink active" data-brew="flatwhite" tabindex="0" aria-current="true">
+            <span class="swatch" style="--c1:#f6ecdc;--c2:#5c3017;--cup:#ece6dc" aria-hidden="true"></span>
+            <div><h3>Flat White</h3><p>Ristretto with velvety steamed milk, poured into a heart.</p></div>
+            <div class="buy"><span class="price">₹220</span><button class="add" type="button" aria-label="Add Flat White to order">Add</button></div>
+          </li>
+          <li class="drink" data-brew="mocha" tabindex="0" aria-current="false">
+            <span class="swatch" style="--c1:#e5c9a8;--c2:#3b1a0d;--cup:#7d8c62" aria-hidden="true"></span>
+            <div><h3>Café Mocha</h3><p>Espresso, house-made cocoa ganache and milk, finished with a swirl.</p></div>
+            <div class="buy"><span class="price">₹240</span><button class="add" type="button" aria-label="Add Café Mocha to order">Add</button></div>
+          </li>
+          <li class="drink" data-brew="kaapi" tabindex="0" aria-current="false">
+            <span class="swatch" style="--c1:#d9b994;--c2:#a8774c;--cup:#c3c7cc" aria-hidden="true"></span>
+            <div><h3>Filter Kaapi</h3><p>Chikmagalur beans with 20% chicory, frothed between two steel tumblers.</p></div>
+            <div class="buy"><span class="price">₹120</span><button class="add" type="button" aria-label="Add Filter Kaapi to order">Add</button></div>
+          </li>
+          <li class="drink" data-brew="coldbrew" tabindex="0" aria-current="false">
+            <span class="swatch" style="--c1:#3a1c0c;--c2:#1a0b05;--cup:#2c3b44" aria-hidden="true"></span>
+            <div><h3>Cold Brew</h3><p>Steeped for 18 hours and served over ice. Smooth, low in acid, a little floral.</p></div>
+            <div class="buy"><span class="price">₹200</span><button class="add" type="button" aria-label="Add Cold Brew to order">Add</button></div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage process" id="process">
+    <div class="wrap">
+      <h2>Green to glossy in four steps.</h2>
+      <ol class="steps block">
+        <li><span class="n">1</span><h3>Cup at the farm</h3><p>We taste every lot where it's grown and only buy what we'd happily serve.</p></li>
+        <li><span class="n">2</span><h3>Roast by ear</h3><p>Five-kilo batches in a drum roaster. We listen for first crack and drop the beans within seconds of target.</p></li>
+        <li><span class="n">3</span><h3>Rest for 48 hours</h3><p>Fresh beans release CO₂. Resting lets the flavour settle so shots pull evenly.</p></li>
+        <li><span class="n">4</span><h3>Brew to the gram</h3><p>Every shot is weighed in and out. If it runs outside 27 to 32 seconds, we pour it away and start again.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="stage visit" id="visit">
+    <div class="wrap">
+      <div class="col-right block">
+        <h2>Pick up your order at the roastery.</h2>
+        <dl class="info">
+          <dt>Address</dt><dd>12 Roaster's Lane, Hauz Khas Village, New Delhi</dd>
+          <dt>Weekdays</dt><dd>7:00 to 20:00</dd>
+          <dt>Weekends</dt><dd>8:00 to 22:00</dd>
+        </dl>
+        <div class="order-panel">
+          <h3>Your order</h3>
+          <p class="order-empty" id="order-empty">Your order is empty. Add a drink from the menu above.</p>
+          <ul id="order-list" hidden></ul>
+          <div class="total-row"><span>Total</span><span id="order-total">₹0</span></div>
+          <button class="btn btn-solid" id="place-order" type="button" disabled>Place pickup order</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <p>First Crack Roasters is a concept website.</p>
+    <p>3D scene built with Three.js. © 2026</p>
+  </div>
+</footer>
+
+<div class="toast-zone" aria-live="polite"><div class="toast" id="toast"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  'use strict';
+  const root = document.documentElement;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const smooth = t => t * t * (3 - 2 * t);
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  const BREWS = {
+    espresso:  { name: 'Espresso',     price: 160, cup: '#24201e', metal: 0,   handle: 1, dark: '#2b1309', crema: '#b9773f', milk: '#f1e2cc', cremaAmt: 1,    art: 0, swirl: 0, foam: 0, steam: 1, ice: 0 },
+    flatwhite: { name: 'Flat White',   price: 220, cup: '#ece6dc', metal: 0,   handle: 1, dark: '#5c3017', crema: '#c48a55', milk: '#f6ecdc', cremaAmt: 0.8,  art: 1, swirl: 0, foam: 0, steam: 1, ice: 0 },
+    mocha:     { name: 'Café Mocha',   price: 240, cup: '#7d8c62', metal: 0,   handle: 1, dark: '#3b1a0d', crema: '#7a3f1f', milk: '#e5c9a8', cremaAmt: 0.6,  art: 0, swirl: 1, foam: 0, steam: 1, ice: 0 },
+    kaapi:     { name: 'Filter Kaapi', price: 120, cup: '#d5d9de', metal: 0.85, handle: 0, dark: '#6a3c1e', crema: '#a8774c', milk: '#d9b994', cremaAmt: 0,    art: 0, swirl: 0, foam: 1, steam: 1, ice: 0 },
+    coldbrew:  { name: 'Cold Brew',    price: 200, cup: '#2c3b44', metal: 0,   handle: 1, dark: '#1a0b05', crema: '#3a1c0c', milk: '#c9a27e', cremaAmt: 0.25, art: 0, swirl: 0, foam: 0, steam: 0, ice: 1 },
+  };
+  const BREW_ORDER = Object.keys(BREWS);
+
+  const STAGES = [
+    { name: 'Green',       temp: '25°C',  c: '#8e9a69' },
+    { name: 'Yellowing',   temp: '160°C', c: '#c4ad66' },
+    { name: 'Cinnamon',    temp: '195°C', c: '#a2683a' },
+    { name: 'First crack', temp: '205°C', c: '#7a4523' },
+    { name: 'Full city',   temp: '220°C', c: '#4d2914' },
+    { name: 'French',      temp: '240°C', c: '#26140b' },
+  ];
+
+  const state = { brew: 'flatwhite', userPicked: false, onBrew: null };
+  const sections = ['top', 'story', 'menu', 'process', 'visit'].map(id => document.getElementById(id));
+
+  /* ---------- Roast progress UI ---------- */
+  const hexToRgb = h => { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+  const STAGE_RGB = STAGES.map(s => hexToRgb(s.c));
+  function roastP() {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    return max > 0 ? clamp(window.scrollY / max, 0, 1) : 0;
+  }
+  function roastCss(p) {
+    const x = p * (STAGES.length - 1);
+    const i = Math.min(Math.floor(x), STAGES.length - 2);
+    const f = x - i;
+    const a = STAGE_RGB[i], b = STAGE_RGB[i + 1];
+    return 'rgb(' + a.map((v, k) => Math.round(lerp(v, b[k], f))).join(',') + ')';
+  }
+  const railItems = Array.from(document.querySelectorAll('.rail li'));
+  const pillName = document.querySelector('.pill-name');
+  const pillTemp = document.querySelector('.pill-temp');
+  const bar = document.querySelector('.progress span');
+  const navLinks = Array.from(document.querySelectorAll('.links a'));
+  let lastStage = -1, lastActive = -1;
+
+  function updateScrollUI() {
+    const p = roastP();
+    root.style.setProperty('--roast', roastCss(p));
+    bar.style.transform = 'scaleX(' + p.toFixed(4) + ')';
+    const stage = Math.round(p * (STAGES.length - 1));
+    if (stage !== lastStage) {
+      lastStage = stage;
+      railItems.forEach((li, i) => { li.classList.toggle('on', i === stage); li.classList.toggle('done', i < stage); });
+      pillName.textContent = STAGES[stage].name;
+      pillTemp.textContent = STAGES[stage].temp;
+    }
+    const probe = window.innerHeight * 0.45;
+    let active = 0;
+    sections.forEach((s, i) => { if (s.getBoundingClientRect().top <= probe) active = i; });
+    if (active !== lastActive) {
+      lastActive = active;
+      navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + sections[active].id));
+    }
+  }
+  window.addEventListener('scroll', updateScrollUI, { passive: true });
+  window.addEventListener('resize', updateScrollUI);
+  updateScrollUI();
+
+  /* ---------- Toast ---------- */
+  const toastEl = document.getElementById('toast');
+  let toastTimer = 0;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2600);
+  }
+
+  /* ---------- Menu: choose a drink ---------- */
+  const drinkEls = Array.from(document.querySelectorAll('.drink'));
+  const nowPouring = document.querySelector('[data-now-pouring]');
+  function setBrew(key, fromUser) {
+    if (!BREWS[key]) return;
+    if (fromUser) state.userPicked = true;
+    if (state.brew === key) return;
+    state.brew = key;
+    drinkEls.forEach(el => {
+      const on = el.dataset.brew === key;
+      el.classList.toggle('active', on);
+      el.setAttribute('aria-current', on ? 'true' : 'false');
+    });
+    if (nowPouring) nowPouring.textContent = BREWS[key].name;
+    if (state.onBrew) state.onBrew(key);
+  }
+  drinkEls.forEach(el => {
+    const key = el.dataset.brew;
+    el.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') setBrew(key, true); });
+    el.addEventListener('click', () => setBrew(key, true));
+    el.addEventListener('focus', () => setBrew(key, true));
+    el.addEventListener('keydown', e => {
+      if (e.target === el && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setBrew(key, true); }
+    });
+  });
+  if (!reduce) {
+    setInterval(() => {
+      if (state.userPicked || document.hidden || window.scrollY > window.innerHeight * 0.6) return;
+      const i = BREW_ORDER.indexOf(state.brew);
+      setBrew(BREW_ORDER[(i + 1) % BREW_ORDER.length], false);
+    }, 3800);
+  }
+
+  /* ---------- Order ---------- */
+  const order = {};
+  const orderBtn = document.querySelector('.order-btn');
+  const countEl = orderBtn.querySelector('.count');
+  const listEl = document.getElementById('order-list');
+  const totalEl = document.getElementById('order-total');
+  const emptyEl = document.getElementById('order-empty');
+  const placeBtn = document.getElementById('place-order');
+  function renderOrder() {
+    const keys = BREW_ORDER.filter(k => order[k] > 0);
+    const count = keys.reduce((s, k) => s + order[k], 0);
+    const total = keys.reduce((s, k) => s + order[k] * BREWS[k].price, 0);
+    countEl.textContent = count;
+    listEl.innerHTML = '';
+    keys.forEach(k => {
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="q">' + order[k] + '×</span><span>' + BREWS[k].name + '</span><span>₹' + (order[k] * BREWS[k].price) + '</span>';
+      const rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'remove';
+      rm.textContent = 'Remove';
+      rm.setAttribute('aria-label', 'Remove one ' + BREWS[k].name);
+      rm.addEventListener('click', () => { order[k] -= 1; renderOrder(); });
+      li.appendChild(rm);
+      listEl.appendChild(li);
+    });
+    totalEl.textContent = '₹' + total;
+    emptyEl.hidden = count > 0;
+    listEl.hidden = count === 0;
+    placeBtn.disabled = count === 0;
+  }
+  document.querySelectorAll('.add').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.closest('.drink').dataset.brew;
+      order[key] = (order[key] || 0) + 1;
+      renderOrder();
+      orderBtn.classList.remove('bump');
+      void orderBtn.offsetWidth;
+      orderBtn.classList.add('bump');
+      toast(BREWS[key].name + ' added to your order');
+    });
+  });
+  placeBtn.addEventListener('click', () => {
+    BREW_ORDER.forEach(k => { delete order[k]; });
+    renderOrder();
+    toast('Pickup order placed. Ready in about 10 minutes.');
+  });
+  renderOrder();
+
+  /* ---------- 3D scene ---------- */
+  function cupProfile(V) {
+    const H = 1.5, T = 0.05;
+    const rOut = t => 0.64 + 0.24 * Math.pow(t, 1.35);
+    const pts = [new V(0.0001, 0), new V(0.56, 0), new V(0.61, 0.015), new V(0.635, 0.05)];
+    for (let i = 0; i <= 24; i++) { const t = i / 24; pts.push(new V(rOut(t), 0.08 + t * (H - 0.08))); }
+    const rTop = rOut(1);
+    for (let i = 1; i < 8; i++) { const a = (i / 8) * Math.PI; pts.push(new V(rTop - T / 2 + Math.cos(a) * T / 2, H + Math.sin(a) * T / 2)); }
+    for (let i = 24; i >= 2; i--) { const t = i / 24; pts.push(new V(rOut(t) - T, 0.08 + t * (H - 0.08))); }
+    pts.push(new V(rOut(0.04) - T - 0.04, 0.15));
+    pts.push(new V(0.0001, 0.16));
+    return pts;
+  }
+  function saucerProfile(V) {
+    return [[0.0001, 0], [0.62, 0], [0.68, 0.025], [0.95, 0.06], [1.2, 0.11], [1.3, 0.15], [1.33, 0.175], [1.31, 0.19], [1.18, 0.145], [0.92, 0.09], [0.72, 0.07], [0.66, 0.075], [0.0001, 0.075]]
+      .map(p => new V(p[0], p[1]));
+  }
+  function makeBean(THREE) {
+    const g = new THREE.SphereGeometry(1, 40, 28);
+    const pos = g.attributes.position;
+    const colors = [];
+    const v = new THREE.Vector3();
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i);
+      const x = v.x * 0.62, z = v.z * 0.9;
+      let y = v.y * 0.42;
+      if (y > 0) y *= 0.72;
+      const gx = x - Math.sin(z * 2.4) * 0.07;
+      const groove = Math.exp(-(gx * gx) / 0.006) * Math.max(0, v.y);
+      y -= groove * 0.17;
+      pos.setXYZ(i, x, y, z);
+      const shade = 1 - groove * 0.7;
+      colors.push(shade, shade, shade);
+    }
+    g.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    g.computeVertexNormals();
+    return g;
+  }
+
+  const COFFEE_VERT = `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }`;
+  const COFFEE_FRAG = `
+    uniform float uTime;
+    uniform float uArt;
+    uniform float uSwirl;
+    uniform float uFoam;
+    uniform float uCremaAmt;
+    uniform float uRipple;
+    uniform vec3 uDark;
+    uniform vec3 uCremaCol;
+    uniform vec3 uMilk;
+    varying vec2 vUv;
+    float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+    float noise(vec2 p) {
+      vec2 i = floor(p); vec2 f = fract(p); vec2 u = f * f * (3.0 - 2.0 * f);
+      return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+    }
+    float fbm(vec2 p) {
+      float v = 0.0; float a = 0.5;
+      for (int i = 0; i < 5; i++) { v += a * noise(p); p *= 2.03; a *= 0.5; }
+      return v;
+    }
+    float dot2(vec2 v) { return dot(v, v); }
+    float sdHeart(vec2 p) {
+      p.x = abs(p.x);
+      if (p.y + p.x > 1.0) return sqrt(dot2(p - vec2(0.25, 0.75))) - sqrt(2.0) / 4.0;
+      return sqrt(min(dot2(p - vec2(0.0, 1.0)), dot2(p - 0.5 * max(p.x + p.y, 0.0)))) * sign(p.x - p.y);
+    }
+    void main() {
+      vec2 p = vUv * 2.0 - 1.0;
+      float r = length(p);
+      float ang = r * 2.4 - uTime * 0.12;
+      float cs = cos(ang);
+      float sn = sin(ang);
+      vec2 q = mat2(cs, -sn, sn, cs) * p;
+      float n = fbm(q * 3.2 + vec2(uTime * 0.04, 0.0));
+      vec3 col = mix(uDark, uCremaCol, smoothstep(0.25, 0.8, n) * uCremaAmt);
+      col = mix(col, uDark * 0.75, smoothstep(0.62, 0.8, fbm(q * 9.0)) * 0.35 * uCremaAmt);
+
+      float a = atan(p.y, p.x);
+      float spiral = sin(a + r * 13.0 - uTime * 0.35);
+      float sp = smoothstep(0.55, 0.92, spiral) * (1.0 - smoothstep(0.2, 0.85, r));
+      col = mix(col, uMilk, sp * uSwirl * 0.9);
+
+      vec2 hp = p + 0.035 * vec2(sin(p.y * 7.0 + uTime * 0.25), cos(p.x * 6.0));
+      float h = sdHeart((hp - vec2(0.0, -0.36)) * 1.45);
+      float heart = 1.0 - smoothstep(-0.015, 0.03, h);
+      col = mix(col, uMilk, heart * uArt);
+
+      vec3 froth = mix(uCremaCol, uMilk, smoothstep(0.3, 0.8, fbm(p * 5.0 + uTime * 0.03)));
+      float bn = noise(p * 30.0 + 3.0);
+      float bub = smoothstep(0.6, 0.66, bn) - smoothstep(0.7, 0.78, bn);
+      froth = mix(froth, uMilk * 1.08, bub * 0.6);
+      col = mix(col, froth, uFoam);
+
+      col *= 1.0 - smoothstep(0.82, 1.0, r) * 0.45;
+      float rd = (r - uRipple * 0.9) * 9.0;
+      float ring = exp(-rd * rd) * (1.0 - clamp(uRipple, 0.0, 1.0));
+      col += ring * 0.16;
+      float hl = 1.0 - smoothstep(0.0, 0.22, length(p - vec2(-0.38, 0.42)));
+      col += hl * 0.12;
+      gl_FragColor = vec4(col, 1.0);
+    }`;
+  const STEAM_VERT = `
+    attribute float aSeed;
+    uniform float uTime;
+    uniform float uPR;
+    uniform float uScale;
+    uniform float uStrength;
+    varying float vAlpha;
+    void main() {
+      float life = fract(uTime * 0.16 + aSeed);
+      float ang = aSeed * 6.2831;
+      float rad = 0.32 * fract(aSeed * 7.13);
+      vec3 p = vec3(cos(ang) * rad, life * 1.7, sin(ang) * rad * 0.7);
+      p.x += sin(life * 4.5 + aSeed * 20.0) * 0.22 * life;
+      p.z += cos(life * 3.2 + aSeed * 13.0) * 0.12 * life;
+      vec4 mv = modelViewMatrix * vec4(p, 1.0);
+      gl_Position = projectionMatrix * mv;
+      gl_PointSize = (160.0 + life * 420.0) * uPR * uScale / -mv.z;
+      vAlpha = sin(life * 3.14159) * (1.0 - life * 0.5) * uStrength;
+    }`;
+  const SOFT_FRAG = `
+    uniform vec3 uColor;
+    uniform float uOpacity;
+    varying float vAlpha;
+    void main() {
+      float d = length(gl_PointCoord - vec2(0.5));
+      float a = 1.0 - smoothstep(0.0, 0.5, d);
+      gl_FragColor = vec4(uColor, a * a * vAlpha * uOpacity);
+    }`;
+  const EMBER_VERT = `
+    attribute float aSeed;
+    attribute float aSize;
+    uniform float uTime;
+    uniform float uScroll;
+    uniform float uPR;
+    uniform float uAmount;
+    varying float vAlpha;
+    void main() {
+      vec3 p = position;
+      p.y = mod(p.y + 4.5 + uTime * (0.1 + aSeed * 0.22) + uScroll * (0.5 + aSeed * 0.8), 9.0) - 4.5;
+      p.x += sin(uTime * 0.5 + aSeed * 31.0) * 0.3;
+      vec4 mv = modelViewMatrix * vec4(p, 1.0);
+      gl_Position = projectionMatrix * mv;
+      gl_PointSize = aSize * uPR * 16.0 / -mv.z;
+      vAlpha = (0.45 + 0.55 * (0.5 + 0.5 * sin(uTime * (1.2 + aSeed * 3.0) + aSeed * 40.0))) * uAmount;
+    }`;
+
+  function initThree() {
+    const THREE = window.THREE;
+    if (!THREE) throw new Error('Three.js did not load');
+    const canvas = document.getElementById('scene');
+    const coarse = window.matchMedia('(pointer: coarse)').matches;
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 2));
+    renderer.setClearColor(0x000000, 0);
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+
+    const scene = new THREE.Scene();
+    const CAM_Z = 9;
+    const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+    camera.position.set(0, 0.6, CAM_Z);
+    const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
+    const srgb = hex => new THREE.Color(hex);
+
+    // Soft studio reflections for the glaze and the oily dark-roast beans
+    try {
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      const env = new THREE.Scene();
+      env.background = new THREE.Color(0x2e2a27);
+      const softbox = (w, h, c, x, y, z) => {
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: c, side: THREE.DoubleSide }));
+        m.position.set(x, y, z);
+        m.lookAt(0, 0, 0);
+        env.add(m);
+      };
+      softbox(8, 3, new THREE.Color(3.2, 3.0, 2.8), 0, 7, 3);
+      softbox(3, 6, new THREE.Color(2.6, 1.5, 0.9), -7, 1, -2);
+      softbox(4, 4, new THREE.Color(1.6, 1.7, 1.8), 7, 2, 5);
+      scene.environment = pmrem.fromScene(env, 0.04).texture;
+      pmrem.dispose();
+    } catch (e) { /* reflections are optional */ }
+
+    const hemi = new THREE.HemisphereLight(0xfff1e0, 0x2a1a12, 0.7);
+    const key = new THREE.DirectionalLight(0xffe2c4, 1.5);
+    key.position.set(3, 5, 4);
+    const rim = new THREE.DirectionalLight(0xff9a5a, 1.2);
+    rim.position.set(-4, 2, -3);
+    const warm = new THREE.PointLight(0xff8a3d, 0.8, 14);
+    warm.position.set(-2, -1, 3);
+    scene.add(hemi, key, rim, warm);
+
+    // ---- Cup rig: rig (position + scale) > tilt (rotation) > cup parts
+    const rig = new THREE.Group();
+    const tilt = new THREE.Group();
+    rig.add(tilt);
+    scene.add(rig);
+
+    const start = BREWS[state.brew];
+    const ceramic = new THREE.MeshPhysicalMaterial({
+      color: lin(start.cup), roughness: 0.3, metalness: start.metal, clearcoat: 0.7, clearcoatRoughness: 0.18, side: THREE.DoubleSide,
+    });
+    const cup = new THREE.Mesh(new THREE.LatheGeometry(cupProfile(THREE.Vector2), 72), ceramic);
+    cup.position.y = -0.75;
+    tilt.add(cup);
+
+    const handle = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.075, 18, 48, Math.PI * 1.25), ceramic);
+    handle.rotation.z = -Math.PI * 0.625;
+    handle.position.set(0.86, 0.111, 0);
+    tilt.add(handle);
+
+    const saucer = new THREE.Mesh(new THREE.LatheGeometry(saucerProfile(THREE.Vector2), 72), ceramic);
+    saucer.position.y = -0.825;
+    tilt.add(saucer);
+
+    const shadowCanvas = document.createElement('canvas');
+    shadowCanvas.width = shadowCanvas.height = 128;
+    const sctx = shadowCanvas.getContext('2d');
+    const grd = sctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grd.addColorStop(0, 'rgba(0,0,0,0.6)');
+    grd.addColorStop(0.55, 'rgba(0,0,0,0.28)');
+    grd.addColorStop(1, 'rgba(0,0,0,0)');
+    sctx.fillStyle = grd;
+    sctx.fillRect(0, 0, 128, 128);
+    const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, map: new THREE.CanvasTexture(shadowCanvas), transparent: true, depthWrite: false, opacity: 0.4 });
+    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 3.6), shadowMat);
+    shadow.rotation.x = -Math.PI / 2;
+    shadow.position.y = -0.86;
+    tilt.add(shadow);
+
+    const coffeeU = {
+      uTime: { value: 0 }, uArt: { value: start.art }, uSwirl: { value: start.swirl }, uFoam: { value: start.foam },
+      uCremaAmt: { value: start.cremaAmt }, uRipple: { value: 5 },
+      uDark: { value: srgb(start.dark) }, uCremaCol: { value: srgb(start.crema) }, uMilk: { value: srgb(start.milk) },
+    };
+    const coffee = new THREE.Mesh(new THREE.CircleGeometry(0.8, 64), new THREE.ShaderMaterial({ uniforms: coffeeU, vertexShader: COFFEE_VERT, fragmentShader: COFFEE_FRAG }));
+    coffee.rotation.x = -Math.PI / 2;
+    coffee.position.y = 0.57;
+    tilt.add(coffee);
+
+    const iceMat = new THREE.MeshPhysicalMaterial({ color: lin('#e8f6ff'), roughness: 0.06, metalness: 0, clearcoat: 1, transparent: true, opacity: 0.6 });
+    const ice = [[0.22, 0.6, 0.1], [-0.25, 0.6, -0.12], [0.02, 0.61, -0.34]].map((p, i) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.26, 0.26), iceMat);
+      m.position.set(p[0], p[1], p[2]);
+      m.rotation.set(i * 0.7, i * 1.3, i * 0.4);
+      m.userData.base = p[1];
+      tilt.add(m);
+      return m;
+    });
+
+    const cupTop = new THREE.Object3D();
+    cupTop.position.set(0, 0.6, 0);
+    tilt.add(cupTop);
+
+    // ---- Steam
+    const STEAM_N = 70;
+    const steamGeo = new THREE.BufferGeometry();
+    steamGeo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(STEAM_N * 3), 3));
+    const steamSeeds = new Float32Array(STEAM_N);
+    for (let i = 0; i < STEAM_N; i++) steamSeeds[i] = Math.random();
+    steamGeo.setAttribute('aSeed', new THREE.Float32BufferAttribute(steamSeeds, 1));
+    const steamMat = new THREE.ShaderMaterial({
+      uniforms: { uTime: { value: 0 }, uPR: { value: renderer.getPixelRatio() }, uScale: { value: 1 }, uStrength: { value: start.steam }, uColor: { value: new THREE.Color('#f3e6d6') }, uOpacity: { value: 0.16 } },
+      vertexShader: STEAM_VERT, fragmentShader: SOFT_FRAG, transparent: true, depthWrite: false,
+    });
+    const steam = new THREE.Points(steamGeo, steamMat);
+    steam.frustumCulled = false;
+    scene.add(steam);
+
+    // ---- Embers / chaff that appear as the roast deepens
+    const EMBER_N = coarse ? 90 : 180;
+    const ePos = new Float32Array(EMBER_N * 3), eSeed = new Float32Array(EMBER_N), eSize = new Float32Array(EMBER_N);
+    for (let i = 0; i < EMBER_N; i++) {
+      ePos[i * 3] = rand(-9, 9); ePos[i * 3 + 1] = rand(-4.5, 4.5); ePos[i * 3 + 2] = rand(-7, 2);
+      eSeed[i] = Math.random(); eSize[i] = rand(2, 5.5);
+    }
+    const emberGeo = new THREE.BufferGeometry();
+    emberGeo.setAttribute('position', new THREE.Float32BufferAttribute(ePos, 3));
+    emberGeo.setAttribute('aSeed', new THREE.Float32BufferAttribute(eSeed, 1));
+    emberGeo.setAttribute('aSize', new THREE.Float32BufferAttribute(eSize, 1));
+    const emberMat = new THREE.ShaderMaterial({
+      uniforms: { uTime: { value: 0 }, uScroll: { value: 0 }, uPR: { value: renderer.getPixelRatio() }, uAmount: { value: 0 }, uColor: { value: new THREE.Color('#ff8a3d') }, uOpacity: { value: 0.9 } },
+      vertexShader: EMBER_VERT, fragmentShader: SOFT_FRAG, transparent: true, depthWrite: false,
+    });
+    const embers = new THREE.Points(emberGeo, emberMat);
+    embers.frustumCulled = false;
+    scene.add(embers);
+
+    // ---- Beans: floating field + a ring that orbits the cup
+    const beanGeo = makeBean(THREE);
+    const stageLin = STAGES.map(s => lin(s.c));
+    const beanMat = new THREE.MeshStandardMaterial({ color: stageLin[0].clone(), roughness: 0.6, metalness: 0, vertexColors: true });
+    const FLOAT_N = coarse ? 12 : 22;
+    const floatBeans = new THREE.InstancedMesh(beanGeo, beanMat, FLOAT_N);
+    floatBeans.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    floatBeans.frustumCulled = false;
+    scene.add(floatBeans);
+    const fData = Array.from({ length: FLOAT_N }, () => ({
+      x: rand(-1, 1), y: rand(-1.2, 1.2), z: rand(-6, -0.5), ax: rand(0, 6.28), ay: rand(0, 6.28), az: rand(0, 6.28),
+      sx: rand(-0.5, 0.5), sy: rand(-0.5, 0.5), s: rand(0.1, 0.16), d: rand(0.4, 1.2),
+    }));
+
+    const ORBIT_N = 10;
+    const orbit = new THREE.Group();
+    orbit.rotation.x = 0.35;
+    rig.add(orbit);
+    const orbitBeans = new THREE.InstancedMesh(beanGeo, beanMat, ORBIT_N);
+    orbitBeans.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    orbitBeans.frustumCulled = false;
+    orbit.add(orbitBeans);
+
+    // ---- Scroll choreography: one pose per section (x is a fraction of half the visible width)
+    const TAU = Math.PI * 2;
+    const KF_DESKTOP = [
+      { x: 0.4, y: -0.25, rx: 0.36, ry: -0.6, rz: 0, s: 1.08, orbit: 0 },
+      { x: -0.44, y: -0.15, rx: 0.55, ry: 0.55, rz: 0.1, s: 1.0, orbit: 1 },
+      { x: 0.42, y: -0.1, rx: 0.78, ry: -0.35, rz: -0.06, s: 1.0, orbit: 0 },
+      { x: 0, y: 0.25, rx: 0.6, ry: TAU - 0.4, rz: 0, s: 0.72, orbit: 1 },
+      { x: -0.44, y: -0.2, rx: 0.45, ry: TAU + 0.5, rz: 0.08, s: 1.0, orbit: 0.35 },
+    ];
+    const KF_MOBILE = [
+      { x: 0, y: -1.5, rx: 0.45, ry: -0.6, rz: 0, s: 0.8, orbit: 0 },
+      { x: 0.2, y: 1.5, rx: 0.6, ry: 0.55, rz: 0.1, s: 0.6, orbit: 1 },
+      { x: 0, y: 1.55, rx: 0.85, ry: -0.35, rz: 0, s: 0.62, orbit: 0 },
+      { x: 0, y: 1.5, rx: 0.6, ry: TAU - 0.4, rz: 0, s: 0.58, orbit: 1 },
+      { x: -0.15, y: 1.5, rx: 0.45, ry: TAU + 0.5, rz: 0.08, s: 0.6, orbit: 0.35 },
+    ];
+    function sectionT() {
+      const vc = window.innerHeight / 2;
+      const c = sections.map(s => { const r = s.getBoundingClientRect(); return r.top + r.height / 2; });
+      if (vc <= c[0]) return 0;
+      for (let i = 0; i < c.length - 1; i++) {
+        if (vc <= c[i + 1]) return i + clamp((vc - c[i]) / (c[i + 1] - c[i]), 0, 1);
+      }
+      return c.length - 1;
+    }
+
+    // ---- Drink targets
+    const tgt = {};
+    function setTargets(k) {
+      const b = BREWS[k];
+      tgt.cup = lin(b.cup); tgt.dark = srgb(b.dark); tgt.crema = srgb(b.crema); tgt.milk = srgb(b.milk);
+      tgt.metal = b.metal; tgt.handle = b.handle; tgt.art = b.art; tgt.swirl = b.swirl; tgt.foam = b.foam;
+      tgt.cremaAmt = b.cremaAmt; tgt.steam = b.steam; tgt.ice = b.ice;
+    }
+    setTargets(state.brew);
+    let handleAmt = start.handle, iceAmt = start.ice, pulseT = 9;
+    state.onBrew = k => { setTargets(k); pulseT = 0; coffeeU.uRipple.value = 0; };
+
+    // ---- Theme
+    const mqDark = window.matchMedia('(prefers-color-scheme: dark)');
+    function isDark() {
+      const a = root.getAttribute('data-theme');
+      if (a === 'dark') return true;
+      if (a === 'light') return false;
+      return mqDark.matches;
+    }
+    function applyTheme() {
+      const dark = isDark();
+      hemi.intensity = dark ? 0.55 : 0.95;
+      key.intensity = dark ? 1.5 : 1.35;
+      rim.intensity = dark ? 1.5 : 0.7;
+      warm.intensity = dark ? 1.0 : 0.4;
+      steamMat.uniforms.uColor.value.set(dark ? '#f3e6d6' : '#8f7868');
+      steamMat.uniforms.uOpacity.value = dark ? 0.16 : 0.2;
+      emberMat.uniforms.uColor.value.set(dark ? '#ff8a3d' : '#7a5236');
+      emberMat.uniforms.uOpacity.value = dark ? 0.9 : 0.4;
+      emberMat.blending = dark ? THREE.AdditiveBlending : THREE.NormalBlending;
+      emberMat.needsUpdate = true;
+      shadowMat.opacity = dark ? 0.6 : 0.35;
+    }
+    applyTheme();
+    if (mqDark.addEventListener) mqDark.addEventListener('change', applyTheme); else if (mqDark.addListener) mqDark.addListener(applyTheme);
+    new MutationObserver(applyTheme).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+
+    // ---- Sizing
+    let halfH = 1, halfW = 1, mobile = false;
+    function resize() {
+      const w = window.innerWidth, h = window.innerHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      halfH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * CAM_Z;
+      halfW = halfH * camera.aspect;
+      mobile = camera.aspect < 0.9 || w < 760;
+      steamMat.uniforms.uPR.value = emberMat.uniforms.uPR.value = renderer.getPixelRatio();
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // ---- Pointer parallax
+    const ptr = { x: 0, y: 0, tx: 0, ty: 0 };
+    window.addEventListener('pointermove', e => {
+      if (e.pointerType !== 'mouse') return;
+      ptr.tx = (e.clientX / window.innerWidth) * 2 - 1;
+      ptr.ty = -((e.clientY / window.innerHeight) * 2 - 1);
+    }, { passive: true });
+
+    const easeOutBack = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+    const wrap = (v, lo, hi) => { const r = hi - lo; return ((((v - lo) % r) + r) % r) + lo; };
+    const dummy = new THREE.Object3D();
+    const tmpV = new THREE.Vector3();
+    const cur = { x: 0, y: 0, rx: 0, ry: 0, rz: 0, s: 1, orbit: 0 };
+    let first = true, time = 0, last = performance.now(), introT = reduce ? 1 : 0;
+
+    function frame(now) {
+      const dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+      time += reduce ? dt * 0.35 : dt;
+      introT = Math.min(1, introT + dt / 1.6);
+
+      const kp = 1 - Math.exp(-dt * 3);
+      ptr.x += (ptr.tx - ptr.x) * kp;
+      ptr.y += (ptr.ty - ptr.y) * kp;
+
+      // Pose from scroll position
+      const t = sectionT();
+      const K = mobile ? KF_MOBILE : KF_DESKTOP;
+      const i = Math.min(Math.floor(t), K.length - 2);
+      const f = smooth(clamp(t - i, 0, 1));
+      const A = K[i], B = K[i + 1];
+      const target = {};
+      for (const k in A) target[k] = lerp(A[k], B[k], f);
+      target.x *= halfW;
+      if (first) { Object.assign(cur, target); first = false; }
+      const k = 1 - Math.exp(-dt * 3.2);
+      for (const p in cur) cur[p] += (target[p] - cur[p]) * k;
+
+      const sizeK = mobile ? clamp(halfW / 1.6, 0.6, 1) : clamp(halfW / 5, 0.78, 1.1);
+      const drop = (1 - easeOutBack(introT)) * 3;
+      pulseT += dt;
+      const pulse = pulseT < 1.2 ? Math.sin(pulseT * 16) * Math.exp(-pulseT * 5) * 0.05 : 0;
+      rig.position.set(cur.x + ptr.x * 0.15, cur.y + drop + Math.sin(time * 0.9) * 0.05, 0);
+      rig.scale.setScalar(cur.s * sizeK * (1 + pulse));
+      tilt.rotation.set(cur.rx - ptr.y * 0.12, cur.ry + Math.sin(time * 0.35) * 0.22 + ptr.x * 0.35, cur.rz);
+      camera.position.x = ptr.x * 0.25;
+      camera.position.y = 0.6 + ptr.y * 0.12;
+      camera.lookAt(0, 0, 0);
+
+      // Drink transitions
+      const kb = 1 - Math.exp(-dt * 4);
+      ceramic.color.lerp(tgt.cup, kb);
+      ceramic.metalness = lerp(ceramic.metalness, tgt.metal, kb);
+      ceramic.roughness = lerp(ceramic.roughness, tgt.metal > 0.5 ? 0.22 : 0.3, kb);
+      ceramic.clearcoat = lerp(ceramic.clearcoat, tgt.metal > 0.5 ? 0.1 : 0.7, kb);
+      coffeeU.uDark.value.lerp(tgt.dark, kb);
+      coffeeU.uCremaCol.value.lerp(tgt.crema, kb);
+      coffeeU.uMilk.value.lerp(tgt.milk, kb);
+      coffeeU.uArt.value = lerp(coffeeU.uArt.value, tgt.art, kb);
+      coffeeU.uSwirl.value = lerp(coffeeU.uSwirl.value, tgt.swirl, kb);
+      coffeeU.uFoam.value = lerp(coffeeU.uFoam.value, tgt.foam, kb);
+      coffeeU.uCremaAmt.value = lerp(coffeeU.uCremaAmt.value, tgt.cremaAmt, kb);
+      coffeeU.uRipple.value += dt * 0.9;
+      coffeeU.uTime.value = time;
+      handleAmt = lerp(handleAmt, tgt.handle, kb);
+      handle.visible = handleAmt > 0.02;
+      handle.scale.set(handleAmt, handleAmt, 0.85 * handleAmt);
+      iceAmt = lerp(iceAmt, tgt.ice, kb);
+      ice.forEach((m, n) => {
+        m.visible = iceAmt > 0.02;
+        m.scale.setScalar(iceAmt);
+        m.position.y = m.userData.base + Math.sin(time * 1.3 + n * 2) * 0.012;
+        m.rotation.y += dt * 0.15;
+      });
+
+      // Steam rises straight up from the surface, whatever the cup's tilt
+      cupTop.getWorldPosition(tmpV);
+      steam.position.copy(tmpV);
+      steam.scale.setScalar(rig.scale.x);
+      steamMat.uniforms.uScale.value = rig.scale.x;
+      steamMat.uniforms.uTime.value = time;
+      steamMat.uniforms.uStrength.value = lerp(steamMat.uniforms.uStrength.value, tgt.steam * introT, kb);
+
+      // Roast: bean colour, sheen, first-crack jitter, chaff
+      const p = roastP();
+      const rx = p * (STAGES.length - 1);
+      const ri = Math.min(Math.floor(rx), STAGES.length - 2);
+      beanMat.color.copy(stageLin[ri]).lerp(stageLin[ri + 1], rx - ri);
+      beanMat.roughness = lerp(0.62, 0.2, p);
+      const crack = reduce ? 0 : Math.exp(-Math.pow((p - 0.6) / 0.07, 2));
+      const scrollRatio = window.scrollY / window.innerHeight;
+      emberMat.uniforms.uTime.value = time;
+      emberMat.uniforms.uScroll.value = scrollRatio;
+      emberMat.uniforms.uAmount.value = 0.12 + 0.88 * smooth(clamp((p - 0.3) / 0.35, 0, 1));
+
+      const beanIntro = smooth(clamp(introT * 1.4 - 0.2, 0, 1));
+      for (let n = 0; n < FLOAT_N; n++) {
+        const b = fData[n];
+        const sc = (CAM_Z - b.z) / CAM_Z;
+        const yf = wrap(b.y + scrollRatio * 0.35 * b.d + time * 0.012 * b.d, -1.2, 1.2);
+        const jit = crack * 0.05;
+        dummy.position.set(b.x * halfW * 1.05 * sc + (Math.random() - 0.5) * jit, yf * halfH * sc + (Math.random() - 0.5) * jit, b.z);
+        dummy.rotation.set(b.ax + time * b.sx, b.ay + time * b.sy, b.az);
+        dummy.scale.setScalar(b.s * beanIntro * (mobile ? 0.7 : 1));
+        dummy.updateMatrix();
+        floatBeans.setMatrixAt(n, dummy.matrix);
+      }
+      floatBeans.instanceMatrix.needsUpdate = true;
+
+      orbitBeans.visible = cur.orbit > 0.01;
+      if (orbitBeans.visible) {
+        for (let n = 0; n < ORBIT_N; n++) {
+          const ang = (n / ORBIT_N) * TAU + time * 0.45;
+          dummy.position.set(Math.cos(ang) * 1.6, Math.sin(ang * 2 + time) * 0.12, Math.sin(ang) * 1.6);
+          dummy.rotation.set(time * 0.8 + n, n * 0.7, time * 0.5);
+          dummy.scale.setScalar(0.13 * cur.orbit);
+          dummy.updateMatrix();
+          orbitBeans.setMatrixAt(n, dummy.matrix);
+        }
+        orbitBeans.instanceMatrix.needsUpdate = true;
+      }
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  try {
+    initThree();
+  } catch (err) {
+    console.warn('3D scene unavailable:', err);
+    root.classList.add('no-webgl');
+  }
+})();
+</script>
+</body>
+</html>
